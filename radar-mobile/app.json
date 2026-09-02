@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Bolt Radar",
+    "slug": "bolt-radar-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "boltradar",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Bolt Radar uses your location to rank nearby taxi opportunity zones."
+        }
+      ]
+    ],
+    "android": {
+      "package": "com.gattopiccolo.boltradar"
+    },
+    "ios": {
+      "bundleIdentifier": "com.gattopiccolo.boltradar"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    }
+  }
+}
