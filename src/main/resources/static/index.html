@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <title>Bolt Radar Tallinn</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #111;
+            color: #eee;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 16px;
+        }
+
+        h1 {
+            margin-bottom: 4px;
+        }
+
+        .location {
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+
+        .zone {
+            background: #222;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .zone-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .details {
+            margin-top: 8px;
+            color: #bbb;
+        }
+
+        .reasons {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            font-size: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .status {
+            margin-bottom: 12px;
+            color: #aaa;
+        }
+
+        .error {
+            color: #ff7777;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🚕 Bolt Radar</h1>
+
+    <div id="location" class="location">
+        📍 Определяю позицию...
+    </div>
+
+    <button onclick="refreshRadar()">
+        Обновить
+    </button>
+
+    <div id="status" class="status"></div>
+
+    <div id="radar"></div>
+
+</div>
+
+<script>
+
+    let currentPosition = null;
+
+    function startLocationTracking() {
+
+        if (!navigator.geolocation) {
+            showError("Браузер не поддерживает GPS");
+            return;
+        }
+
+        navigator.geolocation.watchPosition(
+            position => {
+
+                currentPosition = {
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                };
+
+                document.getElementById("location").innerText =
+                    `📍 ${currentPosition.lat.toFixed(5)}, ` +
+                    `${currentPosition.lon.toFixed(5)}`;
+
+                loadRadar();
+
+            },
+            error => {
+
+                console.error(error);
+
+                showError(
+                    "Не удалось получить GPS: " +
+                    error.message
+                );
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 10000
+            }
+        );
+    }
+
+
+    function refreshRadar() {
+
+        if (!currentPosition) {
+            startLocationTracking();
+            return;
+        }
+
+        loadRadar();
+    }
+
+
+    async function loadRadar() {
+
+        if (!currentPosition) {
+            return;
+        }
+
+        const status =
+            document.getElementById("status");
+
+        status.innerText = "Обновляю radar...";
+
+        try {
+
+            const url =
+                `/api/radar` +
+                `?lat=${currentPosition.lat}` +
+                `&lon=${currentPosition.lon}`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}`
+                );
+            }
+
+            const radar =
+                await response.json();
+
+            renderRadar(radar);
+
+            status.innerText =
+                "Обновлено: " +
+                new Date().toLocaleTimeString();
+
+        } catch (error) {
+
+            console.error(error);
+
+            showError(
+                "Ошибка загрузки radar: " +
+                error.message
+            );
+        }
+    }
+
+
+    function renderRadar(radar) {
+
+        const root =
+            document.getElementById("radar");
+
+        root.innerHTML = "";
+
+        if (!radar.length) {
+
+            root.innerHTML =
+                "<p>Пока нет данных по зонам.</p>";
+
+            return;
+        }
+
+        radar.forEach((zone, index) => {
+
+            const div =
+                document.createElement("div");
+
+            div.className = "zone";
+
+            const icon =
+                scoreIcon(zone.score);
+
+            div.innerHTML = `
+                <div class="zone-header">
+
+                    <div class="zone-name">
+                        ${index === 0 ? "➡️ " : ""}
+                        ${icon}
+                        ${zone.zoneName}
+                    </div>
+
+                    <div class="score">
+                        ${zone.score}
+                    </div>
+
+                </div>
+
+                <div class="details">
+
+                    🚗 ${zone.travelMinutes} min
+                    &nbsp; · &nbsp;
+
+                    ${zone.distanceKm} km
+                    &nbsp; · &nbsp;
+
+                    Demand:
+                    ${Math.round(zone.demand * 100)}%
+
+                    &nbsp; · &nbsp;
+
+                    Pickup:
+                    ${zone.pickupMinutes} min
+
+                </div>
+
+                <div class="reasons">
+                    ${zone.reasons.join(" · ")}
+                </div>
+            `;
+
+            root.appendChild(div);
+        });
+    }
+
+
+    function scoreIcon(score) {
+
+        if (score >= 80) {
+            return "🔥";
+        }
+
+        if (score >= 65) {
+            return "🟢";
+        }
+
+        if (score >= 45) {
+            return "🟡";
+        }
+
+        return "🔴";
+    }
+
+
+    function showError(message) {
+
+        const status =
+            document.getElementById("status");
+
+        status.className =
+            "status error";
+
+        status.innerText =
+            message;
+    }
+
+
+    startLocationTracking();
+
+    setInterval(() => {
+
+        if (currentPosition) {
+            loadRadar();
+        }
+
+    }, 30000);
+
+</script>
+
+</body>
+</html>

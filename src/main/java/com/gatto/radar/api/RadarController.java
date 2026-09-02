@@ -9,11 +9,15 @@ import com.gatto.radar.zone.ZoneRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
+@Validated
 public class RadarController {
 
     private final ZoneRepository zoneRepository;
@@ -43,8 +47,15 @@ public class RadarController {
 
     @GetMapping("/radar")
     public List<RadarItem> radar(
-            @RequestParam double lat,
-            @RequestParam double lon
+            @RequestParam
+            @DecimalMin("-90.0")
+            @DecimalMax("90.0")
+            double lat,
+
+            @RequestParam
+            @DecimalMin("-180.0")
+            @DecimalMax("180.0")
+            double lon
     ) {
         return recommendationService.radar(lat, lon);
     }
