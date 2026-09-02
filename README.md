@@ -76,7 +76,7 @@ curl -X POST http://localhost:8080/api/demand   -H "Content-Type: application/js
 ## Получить рейтинг
 
 ```bash
-curl http://localhost:8080/api/radar
+curl "http://localhost:8080/api/radar?lat=59.42130&lon=24.79380"
 ```
 
 Пример ответа:

@@ -39,7 +39,9 @@ class RadarApiIntegrationTest {
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/radar"))
+        mockMvc.perform(get("/api/radar")
+                        .param("lat", "59.42130")
+                        .param("lon", "24.79380"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].zoneCode").value("ULEMISTE"));
     }

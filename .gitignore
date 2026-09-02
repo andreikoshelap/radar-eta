@@ -4,3 +4,6 @@ data/
 .idea/
 bootrun.out
 bootrun.err
+*.iml
+*.ipr
+*.iws

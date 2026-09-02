@@ -43,8 +43,9 @@ public class RadarController {
 
     @GetMapping("/radar")
     public List<RadarItem> radar(
-            @RequestParam(defaultValue = "0") double relocationMinutes
+            @RequestParam double lat,
+            @RequestParam double lon
     ) {
-        return recommendationService.radar(relocationMinutes);
+        return recommendationService.radar(lat, lon);
     }
 }
